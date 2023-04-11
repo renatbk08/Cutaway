@@ -6,10 +6,13 @@ import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class BusinessCard implements Parcelable {
-    private Bitmap image;
+    private boolean isSelected = false;
+    private byte[] decodedBytes;
+    private Bitmap bitmap;
     private String firstName;
     private String lastName;
     private String company;
@@ -17,26 +20,27 @@ public class BusinessCard implements Parcelable {
     private String email;
     private Map<String, String> socialNetworks;
 
-    public BusinessCard(String firstName, String lastName, String company, String phone, String email) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.company = company;
-        this.phone = phone;
-        this.email = email;
-        this.socialNetworks = new HashMap<>();
-    }
-    public BusinessCard(Bitmap image, String firstName, String lastName, String company, String phone, String email) {
-        this.image = image;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.company = company;
-        this.phone = phone;
-        this.email = email;
-        this.socialNetworks = new HashMap<>();
-    }
 
+    public BusinessCard(Boolean isSelected, Bitmap bitmap, String firstName, String lastName, String company, String phone, String email) {
+        this.isSelected = isSelected;
+        this.bitmap = bitmap;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.company = company;
+        this.phone = phone;
+        this.email = email;
+        this.socialNetworks = new HashMap<>();
+    }
+    public BusinessCard(Boolean isSelected, String firstName, String lastName, String company, String phone, String email) {
+        this.isSelected = isSelected;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.company = company;
+        this.phone = phone;
+        this.email = email;
+        this.socialNetworks = new HashMap<>();
+    }
     protected BusinessCard(Parcel in) {
-        image = in.readParcelable(Bitmap.class.getClassLoader());
         firstName = in.readString();
         lastName = in.readString();
         company = in.readString();
@@ -96,26 +100,15 @@ public class BusinessCard implements Parcelable {
         this.email = email;
     }
 
-    public Map<String, String> getSocialNetworks() {
-        return socialNetworks;
-    }
+    public boolean isSelected() {return isSelected;}
 
-    public void addSocialNetwork(String key, String value) {
-        this.socialNetworks.put(key, value);
-    }
+    public Bitmap getBitmap() {return bitmap;}
 
-    public void removeSocialNetwork(String key) {
-        this.socialNetworks.remove(key);
-    }
+    public void setBitmap(Bitmap bitmap) {this.bitmap = bitmap;}
 
-    public Bitmap getImage() {
-        return image;
-    }
+    public byte[] getBytearray() { return decodedBytes;}
 
-    public void setImage(Bitmap image) {
-        this.image = image;
-    }
-
+    public void setBytearray(byte[] bytearray) {this.decodedBytes = bytearray;}
     public String share() {
         StringBuilder sb = new StringBuilder();
         sb.append("Name: ").append(firstName).append(" ").append(lastName).append("\n");
@@ -135,11 +128,6 @@ public class BusinessCard implements Parcelable {
     }
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
-        Bitmap scaledImage = null;
-        if (image != null && image.getWidth() > 0 && image.getHeight() > 0) {
-             scaledImage = Bitmap.createScaledBitmap(image, image.getWidth()/4, image.getHeight()/4, false);
-            dest.writeParcelable(scaledImage, flags);
-        } else dest.writeParcelable(scaledImage, flags);
         dest.writeString(firstName);
         dest.writeString(lastName);
         dest.writeString(company);

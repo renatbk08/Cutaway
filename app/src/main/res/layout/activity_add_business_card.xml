@@ -28,6 +28,7 @@
             android:layout_height="match_parent"
             android:gravity="center"
             android:text="Here your picture"
+            android:visibility="visible"
             android:textAppearance="?android:textAppearanceLarge"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/add_button"
@@ -95,9 +96,9 @@
         android:id="@+id/button_save"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:textAppearanceLarge"
+        android:padding="16dp"
         android:text="Save"
         android:textAllCaps="false"
-        android:padding="16dp"/>
+        android:textAppearance="?android:textAppearanceLarge" />
 
 </LinearLayout>

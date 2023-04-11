@@ -8,7 +8,7 @@
 
     <TextView
         android:id="@+id/no_cards_text_view"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="There are no business \n cards added yet."
         android:visibility="gone"
