@@ -1,93 +1,136 @@
-<androidx.cardview.widget.CardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardview_front_side_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_margin="8dp"
     app:cardCornerRadius="8dp"
     app:cardElevation="4dp"
     app:cardUseCompatPadding="true">
-    <LinearLayout
+    <ViewFlipper
+        android:id="@+id/viewflipper"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
-        <ImageView
-            android:id="@+id/mImageView"
-            android:layout_width="34dp"
-            android:layout_height="29dp"
-            android:scaleType="centerCrop"
-            android:visibility="gone" />
+        android:layout_height="match_parent" >
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/front_side">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+            <TextView
+                android:id="@+id/first_name_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginBottom="10dp"
+                android:cursorVisible="false"
+                android:text="Имя"
+                android:textAppearance="?android:textAppearanceLarge"
+                android:textIsSelectable="true" />
+
+            <ImageButton
+                android:id="@+id/delete_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentEnd="true"
+                android:layout_gravity="end"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="8dp"
+                android:contentDescription="Удалить"
+                android:elevation="6dp"
+                android:src="@drawable/ic_delete"
+                android:translationZ="6dp" />
+
+            <ImageButton
+                android:id="@+id/refactor_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/delete_button"
+                android:layout_alignParentEnd="true"
+                android:layout_gravity="end"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="8dp"
+                android:contentDescription="Изменить"
+                android:elevation="6dp"
+                android:src="@drawable/ic_refactor"
+                android:translationZ="6dp" />
+
+            <TextView
+                android:id="@+id/last_name_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/first_name_text_view"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginBottom="10dp"
+                android:text="Фамилия"
+                android:textAppearance="?android:textAppearanceLarge"
+                android:textIsSelectable="true" />
+
+            <TextView
+                android:id="@+id/company_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/last_name_text_view"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+                android:text="Организация"
+                android:textAppearance="?android:textAppearanceLarge"
+                android:textIsSelectable="true" />
+
+            <TextView
+                android:id="@+id/phone_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/company_text_view"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginBottom="10dp"
+                android:text="Номер телефона"
+                android:textAppearance="?android:textAppearanceLarge"
+                android:textIsSelectable="true" />
+
+            <TextView
+                android:id="@+id/email_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/phone_text_view"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginBottom="10dp"
+                android:text="Почта"
+                android:textAppearance="?android:textAppearanceLarge"
+                android:textIsSelectable="true" />
+        </RelativeLayout>
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal|center_vertical"
             android:orientation="vertical"
-            android:layout_weight="1">
-        <TextView
-            android:id="@+id/first_name_text_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:textAppearance="?android:textAppearanceLarge"
-            android:textIsSelectable="true"
-            android:text="First Name" />
-        <TextView
-            android:id="@+id/last_name_text_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:textAppearance="?android:textAppearanceLarge"
-            android:textIsSelectable="true"
-            android:text="Last Name" />
+            android:id="@+id/back_side">
+            <ImageView
+                android:id="@+id/mImageView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal|center_vertical"
+                android:src="@drawable/ic_none"
+                android:visibility="visible" />
         </LinearLayout>
-
-        <ImageButton
-            android:id="@+id/delete_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:backgroundTint="@android:color/transparent"
-            android:elevation="6dp"
-            android:src="@drawable/ic_delete"
-            android:translationZ="6dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toEndOf="@id/first_name_text_view"
-            tools:ignore="ObsoleteLayoutParam" />
-    </LinearLayout>
-
-        <TextView
-            android:id="@+id/company_text_view"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:textAppearance="?android:textAppearanceLarge"
-            android:textIsSelectable="true"
-            android:text="Company" />
-
-        <TextView
-            android:id="@+id/phone_text_view"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:textAppearance="?android:textAppearanceLarge"
-            android:textIsSelectable="true"
-            android:text="Phone" />
-
-        <TextView
-            android:id="@+id/email_text_view"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:textAppearance="?android:textAppearanceLarge"
-            android:textIsSelectable="true"
-            android:text="Email" />
-    </LinearLayout>
+    </ViewFlipper>
 </androidx.cardview.widget.CardView>

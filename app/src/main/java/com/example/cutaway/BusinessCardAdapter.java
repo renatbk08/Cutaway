@@ -1,96 +1,81 @@
 package com.example.cutaway;
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.content.SharedPreferences;
+import android.app.Activity;
+import android.app.Dialog;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.ViewFlipper;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.io.ByteArrayInputStream;
-import java.util.List;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 
 public class BusinessCardAdapter extends RecyclerView.Adapter<BusinessCardAdapter.BusinessCardViewHolder> {
-    private List<BusinessCard> mCards;
-    private Context mContext;
+    private ArrayList<BusinessCard> mCards;
+    private final LayoutInflater mInflater;
+    private final Activity mActivity;
+    private BusinessCardAdapterCallback callback;
 
-    public BusinessCardAdapter(Context context, List<BusinessCard> cards) {
-        mCards = cards;
-        mContext = context;
+    public BusinessCardAdapter(Activity activity) {
+        mActivity = activity;
+        mCards = readBusinessCardsFromJson();
+        mInflater = LayoutInflater.from(mActivity);
     }
 
     @NonNull
     @Override
     public BusinessCardViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View itemView = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.cardview, parent, false);
+        View itemView = mInflater.inflate(R.layout.cardview, parent, false);
         return new BusinessCardViewHolder(itemView);
     }
 
-    @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull BusinessCardViewHolder holder, int position) {
-        BusinessCard currentCard = mCards.get(position);
-        SharedPreferences preferences = mContext.getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
-        String encodedString = preferences.getString("image_data", "");
-        byte[] decodedBytes = Base64.decode(encodedString, Base64.DEFAULT);
-        ByteArrayInputStream inputStream = new ByteArrayInputStream(decodedBytes);
-        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.remove("myPrefs");
-        if(currentCard.getBytearray() != null) {
-            decodedBytes = currentCard.getBytearray();
-            inputStream = new ByteArrayInputStream(decodedBytes);
-            bitmap = BitmapFactory.decodeStream(inputStream);
-            holder.mImageView.setImageBitmap(bitmap);
-            holder.mImageView.setVisibility(View.VISIBLE);
-        } else if(currentCard.getBitmap() != null) {
-            holder.mImageView.setImageBitmap(currentCard.getBitmap());
-            holder.mImageView.setVisibility(View.VISIBLE);
-        } else {
-            if (holder.mImageView != null && bitmap != null) {
-                holder.mImageView.setImageBitmap(bitmap);
-                holder.mImageView.setVisibility(View.VISIBLE);
-                currentCard.setBytearray(decodedBytes);
-                mCards.set(position, currentCard);
-            } else {
-                if (holder.mImageView != null || currentCard.isSelected() == false) {
-                    holder.mImageView.setImageBitmap(null);
-                    holder.mImageView.setVisibility(View.GONE);
+        BusinessCard card = mCards.get(position);
+        holder.bindData(card);
+        holder.deleteButton.setOnClickListener(v -> {
+            Dialog dialog = new Dialog(holder.itemView.getRootView().getContext());
+            dialog.setContentView(R.layout.delete_dialog);
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            Button okButton = dialog.findViewById(R.id.ok_button);
+            Button cancelButton = dialog.findViewById(R.id.cancel_button);
+            okButton.setOnClickListener(v1 -> {
+                dialog.dismiss();
+                if (position != RecyclerView.NO_POSITION) {
+                    removeBusinessCard(position);
+                    saveBusinessCards();
+                    if (callback != null) {
+                        callback.onCardRemoved(position);
+                    }
                 }
-            }
-        }
-        try {
-            holder.firstNameTextView.setText("Name: " + currentCard.getFirstName());
-            holder.lastNameTextView.setText("Last name: " + currentCard.getLastName());
-            holder.companyTextView.setText("Company: " + currentCard.getCompany());
-            holder.phoneTextView.setText(currentCard.getPhone());
-            holder.emailTextView.setText(currentCard.getEmail());
-        } catch(NullPointerException exc) {
-            // create a Toast message with a short duration
-            Toast.makeText(mContext, exc.getMessage(), Toast.LENGTH_SHORT).show();
-        }
-
-        // Set the LayoutParams to have match_parent width
-        holder.itemView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-
-        // Add click listener to delete button
-        holder.deleteButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Call the removeCard() method with the adapter position of the card
-                removeCard(holder.getAdapterPosition());
-            }
+            });
+            cancelButton.setOnClickListener(v2 -> dialog.dismiss());
+            dialog.show();
+        });
+        holder.refactButton.setOnClickListener(v -> {
+            Intent intent = new Intent(mActivity, RefactorBusinessCardActivity.class);
+            intent.putExtra("position", position);
+            mActivity.startActivity(intent);
         });
     }
 
@@ -99,29 +84,90 @@ public class BusinessCardAdapter extends RecyclerView.Adapter<BusinessCardAdapte
         return mCards.size();
     }
 
-    public void removeCard(int position) {
-        mCards.remove(position);
-        notifyItemRemoved(position);
+    private ArrayList<BusinessCard> readBusinessCardsFromJson() {
+        Gson gson = new GsonBuilder().create();
+        ArrayList<BusinessCard> businessCards = new ArrayList<>();
+        try (FileReader reader = new FileReader("business_cards.json")) {
+            Type listType = new TypeToken<ArrayList<BusinessCard>>() {}.getType();
+            businessCards = gson.fromJson(reader, listType);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return businessCards;
+    }
+    private void saveBusinessCards() {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        try (FileWriter writer = new FileWriter("business_cards.json", false)) {
+            gson.toJson(mCards, writer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public class BusinessCardViewHolder extends RecyclerView.ViewHolder {
-        public ImageView mImageView;
-        public TextView firstNameTextView;
-        public TextView lastNameTextView;
-        public TextView companyTextView;
-        public TextView phoneTextView;
-        public TextView emailTextView;
-        public ImageButton deleteButton;
-
-        public BusinessCardViewHolder(View view) {
-            super(view);
-            mImageView = view.findViewById(R.id.mImageView);
-            firstNameTextView = view.findViewById(R.id.first_name_text_view);
-            lastNameTextView = view.findViewById(R.id.last_name_text_view);
-            companyTextView = view.findViewById(R.id.company_text_view);
-            phoneTextView = view.findViewById(R.id.phone_text_view);
-            emailTextView = view.findViewById(R.id.email_text_view);
-            deleteButton = view.findViewById(R.id.delete_button);
+    private void removeBusinessCard(int position) {
+        if (mCards.size() <= 1) {
+            mCards = new ArrayList<>();
+        } else {
+            mCards.remove(position);
+            notifyItemRemoved(position);
         }
+    }
+
+    private String convertListToJson(ArrayList<BusinessCard> list) {
+        Gson gson = new Gson();
+        return gson.toJson(list);
+    }
+
+    public interface BusinessCardAdapterCallback {
+        void onCardRemoved(int position);
+    }
+
+    public void setCallback(BusinessCardAdapterCallback callback) {
+        this.callback = callback;
+    }
+    static class BusinessCardViewHolder extends RecyclerView.ViewHolder {
+        TextView firstNameTextView, lastNameTextView, companyTextView, phoneTextView, emailTextView;
+        RelativeLayout frontSide;
+        LinearLayout backSide;
+        ImageButton deleteButton, refactButton;
+        ImageView mImageView;
+        ViewFlipper viewFlipper;
+        BusinessCardViewHolder(View itemView) {
+            super(itemView);
+            firstNameTextView = itemView.findViewById(R.id.first_name_text_view);
+            lastNameTextView = itemView.findViewById(R.id.last_name_text_view);
+            companyTextView = itemView.findViewById(R.id.company_text_view);
+            phoneTextView = itemView.findViewById(R.id.phone_text_view);
+            emailTextView = itemView.findViewById(R.id.email_text_view);
+            frontSide = itemView.findViewById(R.id.front_side);
+            backSide = itemView.findViewById(R.id.back_side);
+            deleteButton = itemView.findViewById(R.id.delete_button);
+            refactButton = itemView.findViewById(R.id.refactor_button);
+            mImageView = itemView.findViewById(R.id.mImageView);
+            viewFlipper = itemView.findViewById(R.id.viewflipper);
+            viewFlipper.setInAnimation(itemView.getContext(), android.R.anim.slide_in_left);
+            viewFlipper.setOutAnimation(itemView.getContext(), android.R.anim.slide_out_right);
+            itemView.setOnClickListener(v -> viewFlipper.showNext());
+        }
+
+        void bindData(BusinessCard card) {
+            firstNameTextView.setText(card.getFirstName());
+            lastNameTextView.setText(card.getLastName());
+            companyTextView.setText(card.getCompany());
+            phoneTextView.setText(card.getPhone());
+            emailTextView.setText(card.getEmail());
+            if(card.getEncoded() != null) {
+                byte[] decodedBytes = Base64.decode(card.getEncoded(), Base64.DEFAULT);
+                Bitmap decodedBitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+                mImageView.setImageBitmap(decodedBitmap);
+            } else {
+                mImageView.setImageResource(R.drawable.ic_none);
+            }
+        }
+    }
+    public void addBusinessCard(BusinessCard card) {
+        mCards.add(card);
+        notifyItemInserted(mCards.size() - 1);
+        saveBusinessCards();
     }
 }

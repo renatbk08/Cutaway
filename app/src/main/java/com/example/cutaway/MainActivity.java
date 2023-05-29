@@ -1,9 +1,6 @@
 package com.example.cutaway;
 
-import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -16,93 +13,126 @@ import androidx.recyclerview.widget.SnapHelper;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
-    private Context mContext;
+public class MainActivity extends AppCompatActivity implements BusinessCardAdapter.BusinessCardAdapterCallback {
     private RecyclerView recyclerView;
-
-    private ArrayList<BusinessCard> businessCards;
+    private ArrayList<BusinessCard> businessCards = new ArrayList<>();
     private TextView noCardsTextView;
-    private FloatingActionButton addButton;
     private BusinessCardAdapter adapter;
-    private SnapHelper snapHelper;
-    private static final int ADD_BUSINESS_CARD_REQUEST = 1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mContext = getApplicationContext();
+
         recyclerView = findViewById(R.id.recycler_view);
         noCardsTextView = findViewById(R.id.no_cards_text_view);
-        addButton = findViewById(R.id.add_button);
-        snapHelper = new LinearSnapHelper();
-        // Initialize the list of business cards
-        businessCards = new ArrayList<>();
-        // Retrieve the list of business cards from SharedPreferences
-        SharedPreferences sharedPreferences = mContext.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-        String json = sharedPreferences.getString("businessCards", "");
-        if (!json.isEmpty()) {
-            Gson gson = new Gson();
-            Type type = new TypeToken<ArrayList<BusinessCard>>() {}.getType();
-            businessCards = gson.fromJson(json, type);
-        } else {
-            businessCards = new ArrayList<>();
-        }
-        adapter = new BusinessCardAdapter(mContext, businessCards);
+        FloatingActionButton addButton = findViewById(R.id.add_button);
+        businessCards = readBusinessCardsFromJson();
+        adapter = new BusinessCardAdapter(this);
+        adapter.setCallback(this);
+
         if (businessCards.isEmpty()) {
             noCardsTextView.setVisibility(View.VISIBLE);
         } else {
             noCardsTextView.setVisibility(View.GONE);
-            if (recyclerView != null) {
-                recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.HORIZONTAL, false));
-                // Set the adapter for the RecyclerView
-                recyclerView.setAdapter(new BusinessCardAdapter(mContext, businessCards));
-                snapHelper.attachToRecyclerView(recyclerView);
-            }
+            setupRecyclerView();
         }
+
         addButton.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, AddBusinessCardActivity.class);
-            intent.putParcelableArrayListExtra("businessCards", businessCards);
-            startActivityForResult(intent, ADD_BUSINESS_CARD_REQUEST);
+            startActivity(intent);
+            finish();
         });
     }
-    @SuppressLint("NotifyDataSetChanged")
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == ADD_BUSINESS_CARD_REQUEST && resultCode == RESULT_OK && data != null) {
-            BusinessCard newBusinessCard = data.getParcelableExtra("newBusinessCard");
-            businessCards.add(newBusinessCard);
-            adapter.notifyDataSetChanged();
-            if (businessCards.isEmpty()) {
-                noCardsTextView.setVisibility(View.VISIBLE);
-            } else {
-                noCardsTextView.setVisibility(View.GONE);
-                if (recyclerView != null) {
-                    recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.HORIZONTAL, false));
-                    // Set the adapter for the RecyclerView
-                    recyclerView.setAdapter(new BusinessCardAdapter(mContext, businessCards));
-                    snapHelper.attachToRecyclerView(recyclerView);
-                }
-            }
-        }
+
+    private void setupRecyclerView() {
+        recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        recyclerView.setAdapter(adapter);
+        SnapHelper snapHelper = new LinearSnapHelper();
+        snapHelper.attachToRecyclerView(recyclerView);
     }
-    @Override
-    protected void onStop() {
-        super.onStop();
-        SharedPreferences sharedPreferences = mContext.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.clear(); // clear the preferences before adding new information
-        String json = convertListToJson(businessCards);
-        editor.putString("businessCards", json);
-        editor.apply(); // apply the changes to SharedPreferences
-    }
+
     private String convertListToJson(ArrayList<BusinessCard> list) {
         Gson gson = new Gson();
         return gson.toJson(list);
     }
+
+    /*private void saveBusinessCards(ArrayList<BusinessCard> businessCards) {
+        try {
+            FileOutputStream outputStream = openFileOutput("business_cards.json", Context.MODE_PRIVATE);
+            String json = convertListToJson(businessCards);
+            outputStream.write(json.getBytes());
+            outputStream.close();
+        } catch (IOException e) {
+            Log.e("TAG", "Error writing file", e);
+            Toast.makeText(this, "Error writing file: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }*/
+    public static void writeBusinessCardsToJson(ArrayList<BusinessCard> businessCards) {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        try (FileWriter writer = new FileWriter("business_cards.json", false)) {
+            gson.toJson(businessCards, writer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static ArrayList<BusinessCard> readBusinessCardsFromJson() {
+        Gson gson = new GsonBuilder().create();
+        ArrayList<BusinessCard> businessCards = new ArrayList<>();
+        try (FileReader reader = new FileReader("business_cards.json")) {
+            Type listType = new TypeToken<ArrayList<BusinessCard>>() {}.getType();
+            businessCards = gson.fromJson(reader, listType);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return businessCards;
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        /*saveBusinessCards*/writeBusinessCardsToJson(businessCards);
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        /*saveBusinessCards*/writeBusinessCardsToJson(businessCards);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        /*saveBusinessCards*/writeBusinessCardsToJson(businessCards);
+    }
+
+    @Override
+    public void onCardRemoved(int position) {
+        if (position >= 0) {
+            businessCards.remove(position);
+        } else {
+            businessCards.clear();
+        }
+        /*saveBusinessCards*/writeBusinessCardsToJson(businessCards);
+
+        if (businessCards.isEmpty()) {
+            noCardsTextView.setVisibility(View.VISIBLE);
+        } else {
+            noCardsTextView.setVisibility(View.GONE);
+        }
+        adapter.notifyDataSetChanged();
+    }
 }
+
+
+
