@@ -37,7 +37,7 @@
             android:id="@+id/edit_text_fName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Name"
+            android:hint="Имя"
             android:inputType="textPersonName"
             android:padding="16dp" />
 
@@ -45,7 +45,7 @@
             android:id="@+id/edit_text_lName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Last name"
+            android:hint="Фамилия"
             android:inputType="textPersonName"
             android:padding="16dp" />
 
@@ -53,7 +53,7 @@
             android:id="@+id/edit_text_company"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Company"
+            android:hint="Организация"
             android:inputType="text"
             android:padding="16dp" />
 
@@ -61,7 +61,7 @@
             android:id="@+id/edit_text_phone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Phone"
+            android:hint="Телефон"
             android:inputType="phone"
             android:padding="16dp" />
 
@@ -69,7 +69,7 @@
             android:id="@+id/edit_text_email"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Email"
+            android:hint="Эл. почта"
             android:inputType="textEmailAddress"
             android:padding="16dp" />
 
@@ -79,7 +79,7 @@
             android:layout_height="wrap_content"
             android:contentDescription="Save"
             android:padding="16dp"
-            android:text="Save"
+            android:text="Сохранить"
             android:textAllCaps="false"
             android:textAppearance="?android:textAppearanceLarge"
             app:cornerRadius="40dp" />

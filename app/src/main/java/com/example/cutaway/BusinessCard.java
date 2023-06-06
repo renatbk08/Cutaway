@@ -9,7 +9,7 @@ public class BusinessCard {
     private String email;
 
     public BusinessCard(String firstName, String lastName, String company, String phone, String email) {
-        this.encoded = "";
+        this.encoded = null;
         this.firstName = firstName;
         this.lastName = lastName;
         this.company = company;

@@ -1,5 +1,6 @@
 package com.example.cutaway;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -13,15 +14,15 @@ import androidx.recyclerview.widget.SnapHelper;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-
 public class MainActivity extends AppCompatActivity implements BusinessCardAdapter.BusinessCardAdapterCallback {
     private RecyclerView recyclerView;
     private ArrayList<BusinessCard> businessCards = new ArrayList<>();
@@ -61,37 +62,33 @@ public class MainActivity extends AppCompatActivity implements BusinessCardAdapt
         snapHelper.attachToRecyclerView(recyclerView);
     }
 
-    private String convertListToJson(ArrayList<BusinessCard> list) {
+    public void writeBusinessCardsToJson(ArrayList<BusinessCard> businessCards) {
         Gson gson = new Gson();
-        return gson.toJson(list);
-    }
-
-    /*private void saveBusinessCards(ArrayList<BusinessCard> businessCards) {
+        String json = gson.toJson(businessCards);
         try {
-            FileOutputStream outputStream = openFileOutput("business_cards.json", Context.MODE_PRIVATE);
-            String json = convertListToJson(businessCards);
-            outputStream.write(json.getBytes());
-            outputStream.close();
-        } catch (IOException e) {
-            Log.e("TAG", "Error writing file", e);
-            Toast.makeText(this, "Error writing file: " + e.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }*/
-    public static void writeBusinessCardsToJson(ArrayList<BusinessCard> businessCards) {
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        try (FileWriter writer = new FileWriter("business_cards.json", false)) {
-            gson.toJson(businessCards, writer);
+            FileOutputStream fileOutput = openFileOutput("business_card.txt", MODE_PRIVATE);
+            fileOutput.write(json.getBytes());
+            fileOutput.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
-    public static ArrayList<BusinessCard> readBusinessCardsFromJson() {
-        Gson gson = new GsonBuilder().create();
+    public ArrayList<BusinessCard> readBusinessCardsFromJson() {
         ArrayList<BusinessCard> businessCards = new ArrayList<>();
-        try (FileReader reader = new FileReader("business_cards.json")) {
-            Type listType = new TypeToken<ArrayList<BusinessCard>>() {}.getType();
-            businessCards = gson.fromJson(reader, listType);
+        try {
+            FileInputStream fileInput = openFileInput("business_card.txt");
+            int size = fileInput.available();
+            byte[] buffer = new byte[size];
+            fileInput.read(buffer);
+            fileInput.close();
+            String json = new String(buffer, StandardCharsets.UTF_8);
+            Gson gson = new Gson();
+            Type businessCardListType = new TypeToken<ArrayList<BusinessCard>>() {}.getType();
+            businessCards = gson.fromJson(json, businessCardListType);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -116,6 +113,7 @@ public class MainActivity extends AppCompatActivity implements BusinessCardAdapt
         /*saveBusinessCards*/writeBusinessCardsToJson(businessCards);
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     @Override
     public void onCardRemoved(int position) {
         if (position >= 0) {

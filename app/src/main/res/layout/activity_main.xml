@@ -10,7 +10,7 @@
         android:id="@+id/no_cards_text_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="There are no business \n cards added yet."
+        android:text="Визитные карточки \n отсутсвуют."
         android:visibility="gone"
         android:textSize="18sp"
         android:gravity="center"
